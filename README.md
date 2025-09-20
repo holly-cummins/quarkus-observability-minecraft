@@ -59,7 +59,7 @@ mvn install
 ### Start the sample application
 
 ```bash
-cd quarkus-todo-app
+cd sample
 quarkus dev
 ```
 
