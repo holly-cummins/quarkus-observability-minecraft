@@ -22,7 +22,7 @@ _Before the demo_ copy the todo app to a fresh directory and edit the pom.xml to
 During the demo
 
 ```bash
-cd quarkus-todo-app
+cd sample
 quarkus dev
 ```
 
@@ -57,6 +57,7 @@ Make a class which says hello.
 
 <!-- MARKDOWN-AUTO-DOCS:START (CODE:src=./extension/runtime/src/main/java/org/acme/minecrafter/runtime/HelloRecorder.java) -->
 <!-- The below code snippet is automatically added from ./extension/runtime/src/main/java/org/acme/minecrafter/runtime/HelloRecorder.java -->
+
 ```java
 package org.acme.minecrafter.runtime;
 
@@ -71,18 +72,21 @@ public class HelloRecorder {
 
 }
 ```
+
 <!-- MARKDOWN-AUTO-DOCS:END -->
 
 .. and hook it into the processor.
 
 <!-- MARKDOWN-AUTO-DOCS:START (CODE:src=./extension/deployment/src/main/java/org/acme/minecrafter/deployment/MinecrafterProcessor.java&lines=36-40) -->
 <!-- The below code snippet is automatically added from ./extension/deployment/src/main/java/org/acme/minecrafter/deployment/MinecrafterProcessor.java -->
+
 ```java
 class MinecrafterProcessor {
 
     private static final String FEATURE = "minecrafter";
     private static final DotName JAX_RS_GET = DotName.createSimple("jakarta.ws.rs.GET");
 ```
+
 <!-- MARKDOWN-AUTO-DOCS:END -->
 
 If you build the extension and then run `quarkus dev` on the app, you should see your hello world message.
@@ -115,11 +119,12 @@ public class MinecraftLogHandlerMaker {
 For the log handler, extend LogHander and add this into the publish method:
 
 ```java
-   @Override
-public void publish(LogRecord record){
-        String formattedMessage=String.format(record.getMessage(),record.getParameters());
-        System.out.println("⛏️ "+formattedMessage);
-        }
+
+@Override
+public void publish(LogRecord record) {
+    String formattedMessage = String.format(record.getMessage(), record.getParameters());
+    System.out.println("⛏️ " + formattedMessage);
+}
 ```
 
 Test logs come out twice on app startup, once from the Quarkus handler and one from our custom handler.
@@ -180,6 +185,7 @@ The minecraft server is on localhost right now, but it could be anywhere, so we'
 
 <!-- MARKDOWN-AUTO-DOCS:START (CODE:src=./extension/runtime/src/main/java/org/acme/minecrafter/runtime/MinecrafterConfig.java) -->
 <!-- The below code snippet is automatically added from ./extension/runtime/src/main/java/org/acme/minecrafter/runtime/MinecrafterConfig.java -->
+
 ```java
 package org.acme.minecrafter.runtime;
 
@@ -204,6 +210,7 @@ public class MinecrafterConfig {
     public String animalType;
 }
 ```
+
 <!-- MARKDOWN-AUTO-DOCS:END -->
 
 #### Add rest client
@@ -212,6 +219,7 @@ Create a JAX-RS client which talks to the endpoints in our minecraft mod.
 
 <!-- MARKDOWN-AUTO-DOCS:START (CODE:src=./extension/runtime/src/main/java/org/acme/minecrafter/runtime/MinecraftService.java) -->
 <!-- The below code snippet is automatically added from ./extension/runtime/src/main/java/org/acme/minecrafter/runtime/MinecraftService.java -->
+
 ```java
 package org.acme.minecrafter.runtime;
 
@@ -248,9 +256,9 @@ public class MinecraftService {
     public void log(String message) {
         try {
             client.target(minecrafterConfig.baseURL)
-                  .path("observability/log")
-                  .request(MediaType.TEXT_PLAIN)
-                  .post(Entity.text(message));
+                    .path("observability/log")
+                    .request(MediaType.TEXT_PLAIN)
+                    .post(Entity.text(message));
             // Don't log anything back about the response or it ends up with too much circular logging
         } catch (Throwable e) {
             System.out.println("\uD83D\uDDE1️ [Minecrafter] Connection error: " + e);
@@ -264,10 +272,10 @@ public class MinecraftService {
     private void invokeMinecraftSynchronously(String path) {
         try {
             String response = client.target(minecrafterConfig.baseURL)
-                                    .path("observability/" + path)
-                                    .request(MediaType.TEXT_PLAIN)
-                                    .post(Entity.text(minecrafterConfig.animalType))
-                                    .readEntity(String.class);
+                    .path("observability/" + path)
+                    .request(MediaType.TEXT_PLAIN)
+                    .post(Entity.text(minecrafterConfig.animalType))
+                    .readEntity(String.class);
 
             System.out.println("\uD83D\uDDE1️ [Minecrafter] Mod response: " + response);
         } catch (Throwable e) {
@@ -277,6 +285,7 @@ public class MinecraftService {
 
 }
 ```
+
 <!-- MARKDOWN-AUTO-DOCS:END -->
 
 #### Add rest client
@@ -305,6 +314,7 @@ Next, let's do some exception handling. Create an exception mapper:
 
 <!-- MARKDOWN-AUTO-DOCS:START (CODE:src=./extension/runtime/src/main/java/org/acme/minecrafter/runtime/RestExceptionMapper.java) -->
 <!-- The below code snippet is automatically added from ./extension/runtime/src/main/java/org/acme/minecrafter/runtime/RestExceptionMapper.java -->
+
 ```java
 package org.acme.minecrafter.runtime;
 
@@ -332,25 +342,28 @@ public class RestExceptionMapper
 
         // We lose some detail about the exceptions here, especially for 404, but we will live with that
         return Response.serverError()
-                       .build();
+                .build();
 
     }
 }
 ```
+
 <!-- MARKDOWN-AUTO-DOCS:END -->
 
 ... and hook it in to the extension:
 
 <!-- MARKDOWN-AUTO-DOCS:START (CODE:src=./extension/deployment/src/main/java/org/acme/minecrafter/deployment/MinecrafterProcessor.java&lines=73-78) -->
 <!-- The below code snippet is automatically added from ./extension/deployment/src/main/java/org/acme/minecrafter/deployment/MinecrafterProcessor.java -->
+
 ```java
-                return kind == org.jboss.jandex.AnnotationTarget.Kind.METHOD;
+                return kind ==org.jboss.jandex.AnnotationTarget.Kind.METHOD;
             }
 
-            public void transform(TransformationContext context) {
-                if (context.getTarget()
-                           .asMethod()
+public void transform(TransformationContext context) {
+    if (context.getTarget()
+            .asMethod()
 ```
+
 <!-- MARKDOWN-AUTO-DOCS:END -->
 
 Visit [http://localhost:8080/api/6](http://localhost:8080/api/6). This will trigger a 404 exception. In minecraft, you

@@ -44,7 +44,7 @@ jobs:
         working-directory: extension
       - name: Build todo app
         run: mvn install  -DskipTests=true
-        working-directory: quarkus-todo-app
+        working-directory: sample
       - uses: dineshsonachalam/markdown-autodocs@v1.0.4
         with:
           output_file_paths: '[./demo-script.md]'
