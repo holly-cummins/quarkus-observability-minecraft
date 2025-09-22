@@ -1,6 +1,6 @@
 # A Minecraft-based observability client: A Quarkus extension demo
 
-![workflow](https://github.com/holly-cummins/quarkus-minecraft-observability-extension/actions/workflows/actions.yml/badge.svg)
+![workflow](https://github.com/quarkiverse/quarkus-observability-minecraft/actions/workflows/actions.yml/badge.svg)
 
 ![a minecraft screen with quarkus logging in it](images/startuplogging.png)
 
