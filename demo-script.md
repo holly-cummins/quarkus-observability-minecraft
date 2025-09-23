@@ -43,7 +43,7 @@ Build it and add it as a dependency to the todo app pom.
 ```xml
 
 <dependency>
-    <groupId>org.acme</groupId>
+    <groupId>io.quarkiverse.observability.minecraft</groupId>
     <artifactId>demo-extension</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 </dependency>
@@ -59,7 +59,7 @@ Make a class which says hello.
 <!-- The below code snippet is automatically added from ./extension/runtime/src/main/java/org/acme/minecrafter/runtime/HelloRecorder.java -->
 
 ```java
-package org.acme.minecrafter.runtime;
+package io.quarkiverse.observability.minecraft.runtime;
 
 import io.quarkus.runtime.annotations.Recorder;
 
@@ -187,7 +187,7 @@ The minecraft server is on localhost right now, but it could be anywhere, so we'
 <!-- The below code snippet is automatically added from ./extension/runtime/src/main/java/org/acme/minecrafter/runtime/MinecrafterConfig.java -->
 
 ```java
-package org.acme.minecrafter.runtime;
+package io.quarkiverse.observability.minecraft.runtime;
 
 import io.quarkus.runtime.annotations.ConfigItem;
 import io.quarkus.runtime.annotations.ConfigPhase;
@@ -221,7 +221,7 @@ Create a JAX-RS client which talks to the endpoints in our minecraft mod.
 <!-- The below code snippet is automatically added from ./extension/runtime/src/main/java/org/acme/minecrafter/runtime/MinecraftService.java -->
 
 ```java
-package org.acme.minecrafter.runtime;
+package io.quarkiverse.observability.minecraft.runtime;
 
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.client.Client;
@@ -316,7 +316,7 @@ Next, let's do some exception handling. Create an exception mapper:
 <!-- The below code snippet is automatically added from ./extension/runtime/src/main/java/org/acme/minecrafter/runtime/RestExceptionMapper.java -->
 
 ```java
-package org.acme.minecrafter.runtime;
+package io.quarkiverse.observability.minecraft.runtime;
 
 
 import jakarta.ws.rs.NotFoundException;
@@ -395,7 +395,7 @@ Then modify the pom.xml
 ```xml
 
 <dependency>
-    <groupId>org.acme</groupId>
+    <groupId>io.quarkiverse.observability.minecraft</groupId>
     <artifactId>demo-extension</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 </dependency>
