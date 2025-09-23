@@ -45,6 +45,6 @@ jobs:
       - name: Build todo app
         run: mvn install  -DskipTests=true
         working-directory: sample
-      - uses: dineshsonachalam/markdown-autodocs@v1.0.4
+      - uses: dineshsonachalam/markdown-autodocs@v1.0.7
         with:
           output_file_paths: '[./demo-script.md]'
