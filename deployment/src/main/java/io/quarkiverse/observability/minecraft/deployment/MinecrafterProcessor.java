@@ -118,7 +118,7 @@ class MinecrafterProcessor {
 
         card.addPage(Page
                 .webComponentPageBuilder()
-                .title("Respawn")
+                .title("Game controls")
                 .icon("font-awesome-solid:gamepad")
                 .componentLink("qwc-minecraft-respawn.js"));
 

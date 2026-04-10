@@ -50,7 +50,7 @@ export class QwcMinecraftRespawn extends LitElement {
         return html`
             <vaadin-button theme="primary" @click="${this._setRespawn}">
                 <vaadin-icon icon="vaadin:flag" slot="prefix"></vaadin-icon>
-                Set Respawn Point
+                Respawn Into New Location
             </vaadin-button>
             ${this._statusMessage ? html`
                 <div class="status-message ${this._statusType}">
