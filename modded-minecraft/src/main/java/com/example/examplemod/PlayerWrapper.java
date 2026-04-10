@@ -156,29 +156,31 @@ public class PlayerWrapper {
             int targetX = (int) (player.getX() + Math.cos(angle) * distance);
             int targetZ = (int) (player.getZ() + Math.sin(angle) * distance);
 
-            // Force the target chunk to load so terrain is generated and
-            // the heightmap is available — avoids crashes from unknown chunks
-            serverLevel.getChunk(targetX >> 4, targetZ >> 4);
+            // Everything below must run on the server thread — this method is
+            // called from an Undertow HTTP thread, and both chunk loading and
+            // setRespawnPosition must be visible to the death/respawn processing.
+            serverLevel.getServer().execute(() -> {
+                // Force the target chunk to load so terrain is generated and
+                // the heightmap is available — avoids crashes from unknown chunks
+                serverLevel.getChunk(targetX >> 4, targetZ >> 4);
 
-            // Find a safe surface Y using the heightmap
-            int safeY = serverLevel.getHeight(Heightmap.Types.MOTION_BLOCKING, targetX, targetZ);
-            BlockPos spawnPosition = new BlockPos(targetX, safeY, targetZ);
+                // Find a safe surface Y using the heightmap
+                int safeY = serverLevel.getHeight(Heightmap.Types.MOTION_BLOCKING, targetX, targetZ);
+                BlockPos spawnPosition = new BlockPos(targetX, safeY, targetZ);
 
-            serverPlayer.setRespawnPosition(
-                    serverLevel.dimension(),
-                    spawnPosition,
-                    0.0F,
-                    true,
-                    false);
+                serverPlayer.setRespawnPosition(
+                        serverLevel.dimension(),
+                        spawnPosition,
+                        0.0F,
+                        true,
+                        false);
 
-            player.displayClientMessage(
-                    Component.literal("Respawn set " + distance + " blocks away at: " + spawnPosition.toShortString()),
-                    false);
+                player.displayClientMessage(
+                        Component.literal("Respawn set " + distance + " blocks away at: " + spawnPosition.toShortString()),
+                        false);
 
-            // Kill the player to force respawn at the new location.
-            // This must run on the server thread — this method is called from an
-            // Undertow HTTP thread, and Minecraft ignores death processing off-thread.
-            serverLevel.getServer().execute(() -> serverPlayer.kill());
+                serverPlayer.kill();
+            });
         }
     }
 
