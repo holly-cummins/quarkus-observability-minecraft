@@ -167,9 +167,10 @@ public class PlayerWrapper {
 
             player.displayClientMessage(Component.literal("Respawn set to: " + spawnPosition.toShortString()), false);
 
-            // Kill the player to force respawn at the new location
-            // Set health to 0 directly - this works even in creative mode
-            serverPlayer.setHealth(0.0F);
+            // Kill the player to force respawn at the new location.
+            // This must run on the server thread — this method is called from an
+            // Undertow HTTP thread, and Minecraft ignores death processing off-thread.
+            serverLevel.getServer().execute(() -> serverPlayer.kill());
         }
     }
 
