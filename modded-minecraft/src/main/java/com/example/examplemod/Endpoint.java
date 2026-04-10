@@ -52,6 +52,13 @@ public class Endpoint {
         return invokeOnPlayer("explode", "Something -bad- happened out in the real world", null);
     }
 
+    @POST
+    @Path("/set-respawn")
+    public String setRespawn() {
+        System.out.println("[Quarkcraft] set-respawn");
+        return invokeOnPlayer("setRespawn", "Respawn point updated", null);
+    }
+
     @NotNull
     private String invokeOnPlayer(String methodName, String message, String param) {
         if (player != null) {

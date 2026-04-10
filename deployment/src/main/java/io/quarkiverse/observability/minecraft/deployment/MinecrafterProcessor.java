@@ -15,6 +15,7 @@ import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.AnnotationsTransformerBuildItem;
 import io.quarkus.arc.deployment.BeanContainerBuildItem;
 import io.quarkus.arc.processor.AnnotationsTransformer;
+import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.IsNormal;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
@@ -23,6 +24,9 @@ import io.quarkus.deployment.builditem.DevServicesResultBuildItem;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.deployment.builditem.LogHandlerBuildItem;
 import io.quarkus.deployment.dev.devservices.DevServicesConfig;
+import io.quarkus.devui.spi.JsonRPCProvidersBuildItem;
+import io.quarkus.devui.spi.page.CardPageBuildItem;
+import io.quarkus.devui.spi.page.Page;
 import io.quarkus.resteasy.reactive.spi.ExceptionMapperBuildItem;
 
 class MinecrafterProcessor {
@@ -104,5 +108,25 @@ class MinecrafterProcessor {
                         c -> "http://" + c.getHost() + ":" + c.getMappedPort(minecraftApiPort)))
                 .build();
 
+    }
+
+    @BuildStep(onlyIf = IsDevelopment.class)
+    public CardPageBuildItem createDevUICard() {
+        CardPageBuildItem card = new CardPageBuildItem();
+
+        card.addBuildTimeData("title", "Minecraft Controls");
+
+        card.addPage(Page
+                .webComponentPageBuilder()
+                .title("Respawn")
+                .icon("font-awesome-solid:gamepad")
+                .componentLink("qwc-minecraft-respawn.js"));
+
+        return card;
+    }
+
+    @BuildStep(onlyIf = IsDevelopment.class)
+    JsonRPCProvidersBuildItem createJsonRPCService() {
+        return new JsonRPCProvidersBuildItem(MinecraftService.class);
     }
 }

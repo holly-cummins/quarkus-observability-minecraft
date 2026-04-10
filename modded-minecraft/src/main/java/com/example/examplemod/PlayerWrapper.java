@@ -14,6 +14,8 @@ import com.mojang.authlib.minecraft.client.ObjectMapper;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LightningBolt;
@@ -140,6 +142,40 @@ public class PlayerWrapper {
                 animal.getZ(), 6F, affectedPositions);
 
         explosion.explode();
+    }
+
+    public void setRespawn(String message, String ignored) {
+        player.displayClientMessage(Component.literal(message), true);
+
+        Level level = player.getLevel();
+        if (level instanceof ServerLevel serverLevel && player instanceof ServerPlayer serverPlayer) {
+            // Generate a random position around the player
+            int randomX = (int) (player.getX() + (Math.random() - 0.5) * 200); // Random within 100 blocks
+            int randomZ = (int) (player.getZ() + (Math.random() - 0.5) * 200);
+
+            // Use player's current Y position to avoid chunk loading issues
+            int spawnY = (int) player.getY();
+            BlockPos spawnPosition = new BlockPos(randomX, spawnY, randomZ);
+
+            // Set the player's individual respawn position using ServerPlayer
+            serverPlayer.setRespawnPosition(
+                    serverLevel.dimension(),
+                    spawnPosition,
+                    0.0F,
+                    true,
+                    false);
+
+            player.displayClientMessage(Component.literal("Respawn set to: " + spawnPosition.toShortString()), false);
+
+            // Kill the player to force respawn at the new location
+            // Set health to 0 directly - this works even in creative mode
+            serverPlayer.setHealth(0.0F);
+        }
+    }
+
+    private static double randomPositionShift() {
+        // Random within 100 blocks of current position; too far causes crashes
+        return (Math.random() - 0.5) * 200;
     }
 
     @NotNull

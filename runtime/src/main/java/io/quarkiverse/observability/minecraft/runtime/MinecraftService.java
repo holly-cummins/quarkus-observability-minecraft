@@ -39,6 +39,11 @@ public class MinecraftService {
         invokeMinecraft("boom");
     }
 
+    public String setRespawn() {
+        invokeMinecraft("set-respawn");
+        return "Respawning into fresh location";
+    }
+
     public void log(String message) {
         try {
             client.target(minecrafterConfig.baseURL())
