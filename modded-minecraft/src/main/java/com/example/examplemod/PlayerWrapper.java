@@ -22,6 +22,7 @@ import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -149,15 +150,20 @@ public class PlayerWrapper {
 
         Level level = player.getLevel();
         if (level instanceof ServerLevel serverLevel && player instanceof ServerPlayer serverPlayer) {
-            // Generate a random position around the player
-            int randomX = (int) (player.getX() + (Math.random() - 0.5) * 200); // Random within 100 blocks
-            int randomZ = (int) (player.getZ() + (Math.random() - 0.5) * 200);
+            // Pick a random direction and go 300-500 blocks away
+            double angle = Math.random() * 2 * Math.PI;
+            int distance = 300 + (int) (Math.random() * 200);
+            int targetX = (int) (player.getX() + Math.cos(angle) * distance);
+            int targetZ = (int) (player.getZ() + Math.sin(angle) * distance);
 
-            // Use player's current Y position to avoid chunk loading issues
-            int spawnY = (int) player.getY();
-            BlockPos spawnPosition = new BlockPos(randomX, spawnY, randomZ);
+            // Force the target chunk to load so terrain is generated and
+            // the heightmap is available — avoids crashes from unknown chunks
+            serverLevel.getChunk(targetX >> 4, targetZ >> 4);
 
-            // Set the player's individual respawn position using ServerPlayer
+            // Find a safe surface Y using the heightmap
+            int safeY = serverLevel.getHeight(Heightmap.Types.MOTION_BLOCKING, targetX, targetZ);
+            BlockPos spawnPosition = new BlockPos(targetX, safeY, targetZ);
+
             serverPlayer.setRespawnPosition(
                     serverLevel.dimension(),
                     spawnPosition,
@@ -165,18 +171,15 @@ public class PlayerWrapper {
                     true,
                     false);
 
-            player.displayClientMessage(Component.literal("Respawn set to: " + spawnPosition.toShortString()), false);
+            player.displayClientMessage(
+                    Component.literal("Respawn set " + distance + " blocks away at: " + spawnPosition.toShortString()),
+                    false);
 
             // Kill the player to force respawn at the new location.
             // This must run on the server thread — this method is called from an
             // Undertow HTTP thread, and Minecraft ignores death processing off-thread.
             serverLevel.getServer().execute(() -> serverPlayer.kill());
         }
-    }
-
-    private static double randomPositionShift() {
-        // Random within 100 blocks of current position; too far causes crashes
-        return (Math.random() - 0.5) * 200;
     }
 
     @NotNull
