@@ -43,7 +43,7 @@ public class PlayerWrapper {
 
     }
 
-    private static void makeLightning(Level world, Vec3 pos) {
+    private static void makeLightning(ServerLevel world, Vec3 pos) {
         LightningBolt lightning = EntityType.LIGHTNING_BOLT.create(world);
         lightning.setPos(pos);
         lightning.setVisualOnly(true);
@@ -52,44 +52,47 @@ public class PlayerWrapper {
 
     // Called reflectively
     public void event(String message, String animalName) {
-
-        Vec3 pos = getPositionInFrontOfPlayer(3);
-
         player.displayClientMessage(Component.literal(message), true);
 
         Level world = player.getCommandSenderWorld();
+        if (world instanceof ServerLevel serverLevel) {
+            // Must run on the server thread — this method is called from an
+            // Undertow HTTP thread, and addFreshEntity is not thread-safe.
+            serverLevel.getServer().execute(() -> {
+                Vec3 pos = getPositionInFrontOfPlayer(3);
 
-        makeLightning(world, pos);
+                makeLightning(serverLevel, pos);
 
-        Entity animal = getAnimalType(animalName).create(world);
-        animal.setPos(pos);
-        String time = DATE_FORMAT.format(new Date());
-        Component timeComponent = Component.literal(time);
-        animal.setCustomName(timeComponent);
-        animal.setCustomNameVisible(true);
-        world.addFreshEntity(animal);
+                Entity animal = getAnimalType(animalName).create(serverLevel);
+                animal.setPos(pos);
+                String time = DATE_FORMAT.format(new Date());
+                animal.setCustomName(Component.literal(time));
+                animal.setCustomNameVisible(true);
+                serverLevel.addFreshEntity(animal);
+            });
+        }
     }
 
     // Called reflectively
     public void customEvent(String message, String animalJson) {
-
-        Vec3 pos = getPositionInFrontOfPlayer(3);
-
         player.displayClientMessage(Component.literal(message), true);
 
         Level world = player.getCommandSenderWorld();
+        if (world instanceof ServerLevel serverLevel) {
+            serverLevel.getServer().execute(() -> {
+                Vec3 pos = getPositionInFrontOfPlayer(3);
 
-        makeLightning(world, pos);
+                makeLightning(serverLevel, pos);
 
-        WuffStuff wuffStuff = objectMapper.readValue(animalJson, WuffStuff.class);
-        Wuff animal = CRAB_ENTITY.get().create(world);
-        animal.setPos(pos);
-        animal.setWuffStuff(wuffStuff);
-        Component nameTag = Component.literal(wuffStuff.getName());
-        animal.setCustomName(nameTag);
-        animal.setCustomNameVisible(true);
-        world.addFreshEntity(animal);
-
+                WuffStuff wuffStuff = objectMapper.readValue(animalJson, WuffStuff.class);
+                Wuff animal = CRAB_ENTITY.get().create(serverLevel);
+                animal.setPos(pos);
+                animal.setWuffStuff(wuffStuff);
+                animal.setCustomName(Component.literal(wuffStuff.getName()));
+                animal.setCustomNameVisible(true);
+                serverLevel.addFreshEntity(animal);
+            });
+        }
     }
 
     private EntityType getAnimalType(String animalName) {
@@ -133,17 +136,21 @@ public class PlayerWrapper {
         player.displayClientMessage(Component.literal(message), true);
         Level level = player.getCommandSenderWorld();
 
-        Entity animal = EntityType.FROG.create(level);
-        animal.setPos(getPositionInFrontOfPlayer(6));
-        level.addFreshEntity(animal);
+        if (level instanceof ServerLevel serverLevel) {
+            serverLevel.getServer().execute(() -> {
+                Entity animal = EntityType.FROG.create(serverLevel);
+                animal.setPos(getPositionInFrontOfPlayer(6));
+                serverLevel.addFreshEntity(animal);
 
-        List<BlockPos> affectedPositions = new ArrayList();
-        affectedPositions.add(new BlockPos(animal.getX(), animal.getY(),
-                animal.getZ()));
-        Explosion explosion = new Explosion(level, animal, animal.getX(), animal.getY(),
-                animal.getZ(), 6F, affectedPositions);
+                List<BlockPos> affectedPositions = new ArrayList<>();
+                affectedPositions.add(new BlockPos(animal.getX(), animal.getY(),
+                        animal.getZ()));
+                Explosion explosion = new Explosion(serverLevel, animal, animal.getX(), animal.getY(),
+                        animal.getZ(), 6F, affectedPositions);
 
-        explosion.explode();
+                explosion.explode();
+            });
+        }
     }
 
     public void setRespawn(String message, String ignored) {
