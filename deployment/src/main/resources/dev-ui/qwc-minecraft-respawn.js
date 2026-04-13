@@ -37,20 +37,26 @@ export class QwcMinecraftRespawn extends LitElement {
 
     static properties = {
         _statusMessage: {state: true},
-        _statusType: {state: true}
+        _statusType: {state: true},
+        _playerDead: {state: true}
     }
 
     constructor() {
         super();
         this._statusMessage = '';
         this._statusType = '';
+        this._playerDead = false;
     }
 
     render() {
         return html`
-            <vaadin-button theme="primary" @click="${this._respawn}">
+            <vaadin-button theme="primary" @click="${this._setRespawnAndKill}">
                 <vaadin-icon icon="vaadin:flag" slot="prefix"></vaadin-icon>
                 Respawn Into New Location
+            </vaadin-button>
+            <vaadin-button theme="primary" @click="${this._respawnPlayer}" ?disabled="${!this._playerDead}">
+                <vaadin-icon icon="vaadin:play" slot="prefix"></vaadin-icon>
+                Respawn
             </vaadin-button>
             ${this._statusMessage ? html`
                 <div class="status-message ${this._statusType}">
@@ -60,7 +66,7 @@ export class QwcMinecraftRespawn extends LitElement {
         `;
     }
 
-    _respawn() {
+    _setRespawnAndKill() {
         this._statusMessage = 'Setting respawn point...';
         this._statusType = '';
 
@@ -69,8 +75,23 @@ export class QwcMinecraftRespawn extends LitElement {
             this._statusType = 'success';
             return this.jsonRpc.killPlayer();
         }).then(() => {
-            this._statusMessage = 'Respawning at new location';
+            this._statusMessage = 'Player killed — click Respawn to continue';
             this._statusType = 'success';
+            this._playerDead = true;
+        }).catch(error => {
+            this._statusMessage = `Error: ${error.message || 'Failed to respawn'}`;
+            this._statusType = 'error';
+        });
+    }
+
+    _respawnPlayer() {
+        this._statusMessage = 'Respawning...';
+        this._statusType = '';
+
+        this.jsonRpc.respawnPlayer().then(() => {
+            this._statusMessage = 'Player respawned at new location';
+            this._statusType = 'success';
+            this._playerDead = false;
             setTimeout(() => {
                 this._statusMessage = '';
                 this._statusType = '';

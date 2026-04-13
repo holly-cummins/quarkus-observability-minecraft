@@ -19,6 +19,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LightningBolt;
+import net.minecraft.server.players.PlayerList;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
@@ -198,7 +199,26 @@ public class PlayerWrapper {
         if (level instanceof ServerLevel serverLevel && player instanceof ServerPlayer serverPlayer) {
             // Must run on the server thread — Minecraft ignores death
             // processing off-thread.
-            serverLevel.getServer().execute(() -> serverPlayer.kill());
+            serverLevel.getServer().execute(() -> {
+                if (serverPlayer.isAlive()) {
+                    serverPlayer.kill();
+                }
+            });
+        }
+    }
+
+    public void respawnPlayer(String message, String ignored) {
+        Level level = player.getLevel();
+        if (level instanceof ServerLevel serverLevel && player instanceof ServerPlayer serverPlayer) {
+            serverLevel.getServer().execute(() -> {
+                if (!serverPlayer.isAlive()) {
+                    PlayerList playerList = serverPlayer.server.getPlayerList();
+                    ServerPlayer newPlayer = playerList.respawn(serverPlayer, false);
+                    // respawn() creates a new ServerPlayer; update the reference
+                    // so subsequent calls operate on the live player.
+                    Endpoint.setPlayer(new PlayerWrapper(newPlayer));
+                }
+            });
         }
     }
 
