@@ -22,6 +22,10 @@
       <artifactId>quarkus-devservices-deployment</artifactId>
     </dependency>
     <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-vertx-http-deployment-spi</artifactId>
+    </dependency>
+    <dependency>
       <groupId>io.quarkiverse.observability.minecraft</groupId>
       <artifactId>quarkus-observability-minecraft</artifactId>
       <version>${project.version}</version>
