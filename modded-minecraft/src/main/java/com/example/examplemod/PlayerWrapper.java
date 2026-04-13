@@ -169,8 +169,10 @@ public class PlayerWrapper {
                 // Minecraft's respawn logic rejects positions without headroom.
                 int y = serverLevel.getHeight(Heightmap.Types.MOTION_BLOCKING, targetX, targetZ);
                 while (y < serverLevel.getMaxBuildHeight() - 1
-                        && (!serverLevel.getBlockState(new BlockPos(targetX, y, targetZ)).getCollisionShape(serverLevel, new BlockPos(targetX, y, targetZ)).isEmpty()
-                            || !serverLevel.getBlockState(new BlockPos(targetX, y + 1, targetZ)).getCollisionShape(serverLevel, new BlockPos(targetX, y + 1, targetZ)).isEmpty())) {
+                        && (!serverLevel.getBlockState(new BlockPos(targetX, y, targetZ))
+                                .getCollisionShape(serverLevel, new BlockPos(targetX, y, targetZ)).isEmpty()
+                                || !serverLevel.getBlockState(new BlockPos(targetX, y + 1, targetZ))
+                                        .getCollisionShape(serverLevel, new BlockPos(targetX, y + 1, targetZ)).isEmpty())) {
                     y++;
                 }
                 BlockPos spawnPosition = new BlockPos(targetX, y, targetZ);
