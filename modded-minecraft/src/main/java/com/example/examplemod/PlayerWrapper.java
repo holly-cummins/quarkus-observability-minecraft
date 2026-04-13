@@ -156,17 +156,24 @@ public class PlayerWrapper {
             int targetX = (int) (player.getX() + Math.cos(angle) * distance);
             int targetZ = (int) (player.getZ() + Math.sin(angle) * distance);
 
-            // Everything below must run on the server thread — this method is
-            // called from an Undertow HTTP thread, and both chunk loading and
-            // setRespawnPosition must be visible to the death/respawn processing.
+            // Must run on the server thread — this method is called from an
+            // Undertow HTTP thread, and setRespawnPosition must be visible to
+            // the death/respawn processing that happens later.
             serverLevel.getServer().execute(() -> {
                 // Force the target chunk to load so terrain is generated and
                 // the heightmap is available — avoids crashes from unknown chunks
                 serverLevel.getChunk(targetX >> 4, targetZ >> 4);
 
-                // Find a safe surface Y using the heightmap
-                int safeY = serverLevel.getHeight(Heightmap.Types.MOTION_BLOCKING, targetX, targetZ);
-                BlockPos spawnPosition = new BlockPos(targetX, safeY, targetZ);
+                // Find a safe surface Y using the heightmap, then scan upward
+                // until we find two clear blocks for the player to stand in.
+                // Minecraft's respawn logic rejects positions without headroom.
+                int y = serverLevel.getHeight(Heightmap.Types.MOTION_BLOCKING, targetX, targetZ);
+                while (y < serverLevel.getMaxBuildHeight() - 1
+                        && (!serverLevel.getBlockState(new BlockPos(targetX, y, targetZ)).getCollisionShape(serverLevel, new BlockPos(targetX, y, targetZ)).isEmpty()
+                            || !serverLevel.getBlockState(new BlockPos(targetX, y + 1, targetZ)).getCollisionShape(serverLevel, new BlockPos(targetX, y + 1, targetZ)).isEmpty())) {
+                    y++;
+                }
+                BlockPos spawnPosition = new BlockPos(targetX, y, targetZ);
 
                 serverPlayer.setRespawnPosition(
                         serverLevel.dimension(),
@@ -178,9 +185,18 @@ public class PlayerWrapper {
                 player.displayClientMessage(
                         Component.literal("Respawn set " + distance + " blocks away at: " + spawnPosition.toShortString()),
                         false);
-
-                serverPlayer.kill();
             });
+        }
+    }
+
+    public void killPlayer(String message, String ignored) {
+        player.displayClientMessage(Component.literal(message), true);
+
+        Level level = player.getLevel();
+        if (level instanceof ServerLevel serverLevel && player instanceof ServerPlayer serverPlayer) {
+            // Must run on the server thread — Minecraft ignores death
+            // processing off-thread.
+            serverLevel.getServer().execute(() -> serverPlayer.kill());
         }
     }
 

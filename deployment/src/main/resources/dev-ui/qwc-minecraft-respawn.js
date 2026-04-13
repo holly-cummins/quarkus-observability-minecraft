@@ -48,7 +48,7 @@ export class QwcMinecraftRespawn extends LitElement {
 
     render() {
         return html`
-            <vaadin-button theme="primary" @click="${this._setRespawn}">
+            <vaadin-button theme="primary" @click="${this._respawn}">
                 <vaadin-icon icon="vaadin:flag" slot="prefix"></vaadin-icon>
                 Respawn Into New Location
             </vaadin-button>
@@ -60,19 +60,23 @@ export class QwcMinecraftRespawn extends LitElement {
         `;
     }
 
-    _setRespawn() {
+    _respawn() {
         this._statusMessage = 'Setting respawn point...';
         this._statusType = '';
-        
-        this.jsonRpc.setRespawn().then(response => {
-            this._statusMessage = 'Respawn point set successfully!';
+
+        this.jsonRpc.setRespawn().then(() => {
+            this._statusMessage = 'Respawn point set — killing player...';
+            this._statusType = 'success';
+            return this.jsonRpc.killPlayer();
+        }).then(() => {
+            this._statusMessage = 'Respawning at new location';
             this._statusType = 'success';
             setTimeout(() => {
                 this._statusMessage = '';
                 this._statusType = '';
             }, 3000);
         }).catch(error => {
-            this._statusMessage = `Error: ${error.message || 'Failed to set respawn point'}`;
+            this._statusMessage = `Error: ${error.message || 'Failed to respawn'}`;
             this._statusType = 'error';
         });
     }

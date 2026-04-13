@@ -41,7 +41,12 @@ public class MinecraftService {
 
     public String setRespawn() {
         invokeMinecraft("set-respawn");
-        return "Respawning into fresh location";
+        return "Respawn point set to a new location";
+    }
+
+    public String killPlayer() {
+        invokeMinecraft("kill");
+        return "Killing player to trigger respawn";
     }
 
     public void log(String message) {
